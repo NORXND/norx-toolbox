@@ -43,7 +43,7 @@ async def command_start_handler(message: "Message") -> None:
         f"{code('/crop')} — crop an attached image/video via a web page",
         "",
         escape_md("Sharing:"),
-        f"{code('/go <url> [duration]')} — shorten a URL, permanent by default",
+        f"{code('/shorten <url> [duration]')} — shorten a URL, permanent by default",
         f"{code('/share [duration]')} — temporary file share link, 1 day by default",
         "",
         escape_md(
