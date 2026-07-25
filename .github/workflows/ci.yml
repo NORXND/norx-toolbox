@@ -56,8 +56,7 @@ jobs:
             texlive-latex-recommended \
             texlive-xetex \
             --no-install-recommends \
-            && rm -rf /var/lib/apt/lists/* \ &&
-            ARCH=$(uname -m) && \
+            && ARCH=$(uname -m) && \
             if [ "$ARCH" = "aarch64" ]; then \
             VTRACER_ASSET="vtracer-aarch64-unknown-linux-musl.tar.gz"; \
             else \
