@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your links & files</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            color: #eee;
+            font-family: system-ui, sans-serif;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 16px;
+            color: #999;
+            margin-top: 28px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .meta {
+            font-size: 13px;
+            color: #888;
+        }
+
+        a {
+            color: #4dabf7;
+            word-break: break-all;
+        }
+
+        button {
+            background: #c92a2a;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Links</h2>
+    <div id="links"></div>
+
+    <h2>Files</h2>
+    <div id="files"></div>
+
+    <script>
+        const dashToken = "{{ dash_token }}";
+        const links = {{ links | tojson }};
+        const files = {{ files | tojson }};
+
+        function fmtExpiry(exp) {
+            if (exp === null) return "permanent";
+            const d = new Date(exp * 1000);
+            return d < new Date() ? "expired" : "expires " + d.toLocaleString();
+        }
+
+        function renderLinks() {
+            const el = document.getElementById('links');
+            el.innerHTML = links.map(l => `
+    <div class="row" data-token="${l.token}">
+      <div>
+        <a href="/go/${l.token}" target="_blank">/go/${l.token}</a>
+        <div class="meta">${l.target_url} · ${l.hits} hits · ${fmtExpiry(l.expires_at)}</div>
+      </div>
+      <button onclick="deleteLink('${l.token}')">Delete</button>
+    </div>
+  `).join('') || '<div class="meta">None yet.</div>';
+        }
+
+        function renderFiles() {
+            const el = document.getElementById('files');
+            el.innerHTML = files.map(f => `
+    <div class="row" data-token="${f.token}">
+      <div>
+        <a href="/share/${f.token}/${f.filename}" target="_blank">${f.filename}</a>
+        <div class="meta">${fmtExpiry(f.expires_at)}</div>
+      </div>
+      <button onclick="deleteFile('${f.token}')">Delete</button>
+    </div>
+  `).join('') || '<div class="meta">None yet.</div>';
+        }
+
+        async function deleteLink(token) {
+            await fetch(`/api/dashboard/${dashToken}/links/${token}`, { method: 'DELETE' });
+            document.querySelector(`#links [data-token="${token}"]`).remove();
+        }
+
+        async function deleteFile(token) {
+            await fetch(`/api/dashboard/${dashToken}/files/${token}`, { method: 'DELETE' });
+            document.querySelector(`#files [data-token="${token}"]`).remove();
+        }
+
+        renderLinks();
+        renderFiles();
+    </script>
+
+</body>
+
+</html>

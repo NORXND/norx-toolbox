@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "norx-toolbox-bot"
+version = "0.1.0"
+authors = [
+  {name = "Norbert Dudziak", email = "norbert.dudziak@norxnd.com"}
+]
+description = "Private Telegram toolbox bot."
+requires-python = ">=3.14"
+dependencies = [
+  "aiogram==3.30.0",
+  "Quart==0.21.0",
+  "yt-dlp==2026.7.4",
+  "pillow==12.3.0",
+  "python-dotenv==1.1.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy==2.3.0",
+    "pyright==1.1.411",
+    "build==1.5.0",
+]
+
+[[tool.mypy.overrides]]
+module = "quart.*"
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = "yt_dlp.*"
+follow_untyped_imports = true

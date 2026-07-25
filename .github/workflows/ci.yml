@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.14']
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          apt-get update && apt-get install -y \
+            curl \
+            unzip \
+            git \
+            ca-certificates \
+            build-essential \
+            assimp-utils \
+            calibre \
+            dasel \
+            dcraw \
+            dvisvgm \
+            ffmpeg \
+            ghostscript \
+            graphicsmagick \
+            imagemagick \
+            inkscape \
+            latexmk \
+            libheif-examples \
+            libjxl-tools \
+            libreoffice \
+            libva2 \
+            libvips-tools \
+            libemail-outlook-message-perl \
+            lmodern \
+            mupdf-tools \
+            pandoc \
+            poppler-utils \
+            potrace \
+            python3-numpy \
+            python3-tinycss2 \
+            resvg \
+            texlive \
+            texlive-fonts-recommended \
+            texlive-latex-extra \
+            texlive-latex-recommended \
+            texlive-xetex \
+            --no-install-recommends \
+            && rm -rf /var/lib/apt/lists/* \ &&
+            ARCH=$(uname -m) && \
+            if [ "$ARCH" = "aarch64" ]; then \
+            VTRACER_ASSET="vtracer-aarch64-unknown-linux-musl.tar.gz"; \
+            else \
+            VTRACER_ASSET="vtracer-x86_64-unknown-linux-musl.tar.gz"; \
+            fi && \
+            curl -L -o /tmp/vtracer.tar.gz "https://github.com/visioncortex/vtracer/releases/download/0.6.4/${VTRACER_ASSET}" && \
+            tar -xzf /tmp/vtracer.tar.gz -C /tmp/ && \
+            mv /tmp/vtracer /usr/local/bin/vtracer && \
+            chmod +x /usr/local/bin/vtracer && \
+            rm /tmp/vtracer.tar.gz
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[dev]
+
+      - name: Run compile check
+        run: python -m compileall norx_toolbox
+
+      - name: Run mypy
+        run: mypy norx_toolbox --config-file pyproject.toml
+
+      - name: Run pyright
+        run: pyright
+
+      - name: Build package
+        run: python -m build

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crop</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    color: #eee;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+  }
+  #stage {
+    position: relative;
+    max-width: 100%;
+    touch-action: none;
+  }
+  #media {
+    display: block;
+    max-width: 100%;
+    max-height: 80vh;
+    user-select: none;
+  }
+  #cropbox {
+    position: absolute;
+    border: 2px solid #4dabf7;
+    background: rgba(77, 171, 247, 0.15);
+    cursor: move;
+    box-sizing: border-box;
+  }
+  .handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #4dabf7;
+    border-radius: 50%;
+    right: -7px;
+    bottom: -7px;
+    cursor: nwse-resize;
+  }
+  #controls {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  button {
+    background: #4dabf7;
+    color: #111;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #555;
+    color: #999;
+  }
+  #status {
+    font-size: 14px;
+    color: #999;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  {% if is_video %}
+  <video id="media" src="{{ file_url }}" controls muted></video>
+  {% else %}
+  <img id="media" src="{{ file_url }}">
+  {% endif %}
+  <div id="cropbox">
+    <div class="handle"></div>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="submit-btn">Crop &amp; Send</button>
+  <span id="status"></span>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+const media = document.getElementById('media');
+const cropbox = document.getElementById('cropbox');
+const handle = cropbox.querySelector('.handle');
+const submitBtn = document.getElementById('submit-btn');
+const statusEl = document.getElementById('status');
+
+function initCropbox() {
+  const rect = media.getBoundingClientRect();
+  const w = rect.width * 0.6;
+  const h = rect.height * 0.6;
+  cropbox.style.left = ((rect.width - w) / 2) + 'px';
+  cropbox.style.top = ((rect.height - h) / 2) + 'px';
+  cropbox.style.width = w + 'px';
+  cropbox.style.height = h + 'px';
+}
+
+media.addEventListener('loadedmetadata', initCropbox);
+media.addEventListener('load', initCropbox);
+if (media.tagName === 'IMG' && media.complete) initCropbox();
+
+let dragging = null; // 'move' | 'resize' | null
+let start = { x: 0, y: 0, boxX: 0, boxY: 0, boxW: 0, boxH: 0 };
+
+function pointerDown(e, mode) {
+  dragging = mode;
+  const p = e.touches ? e.touches[0] : e;
+  start.x = p.clientX;
+  start.y = p.clientY;
+  start.boxX = cropbox.offsetLeft;
+  start.boxY = cropbox.offsetTop;
+  start.boxW = cropbox.offsetWidth;
+  start.boxH = cropbox.offsetHeight;
+  e.preventDefault();
+}
+
+function pointerMove(e) {
+  if (!dragging) return;
+  const p = e.touches ? e.touches[0] : e;
+  const dx = p.clientX - start.x;
+  const dy = p.clientY - start.y;
+  const stageRect = stage.getBoundingClientRect();
+
+  if (dragging === 'move') {
+    let newX = Math.max(0, Math.min(start.boxX + dx, stageRect.width - start.boxW));
+    let newY = Math.max(0, Math.min(start.boxY + dy, stageRect.height - start.boxH));
+    cropbox.style.left = newX + 'px';
+    cropbox.style.top = newY + 'px';
+  } else if (dragging === 'resize') {
+    let newW = Math.max(20, Math.min(start.boxW + dx, stageRect.width - start.boxX));
+    let newH = Math.max(20, Math.min(start.boxH + dy, stageRect.height - start.boxY));
+    cropbox.style.width = newW + 'px';
+    cropbox.style.height = newH + 'px';
+  }
+}
+
+function pointerUp() { dragging = null; }
+
+cropbox.addEventListener('mousedown', (e) => {
+  if (e.target === handle) return;
+  pointerDown(e, 'move');
+});
+handle.addEventListener('mousedown', (e) => pointerDown(e, 'resize'));
+window.addEventListener('mousemove', pointerMove);
+window.addEventListener('mouseup', pointerUp);
+
+cropbox.addEventListener('touchstart', (e) => {
+  if (e.target === handle) return;
+  pointerDown(e, 'move');
+});
+handle.addEventListener('touchstart', (e) => pointerDown(e, 'resize'));
+window.addEventListener('touchmove', pointerMove, { passive: false });
+window.addEventListener('touchend', pointerUp);
+
+submitBtn.addEventListener('click', async () => {
+  const mediaRect = media.getBoundingClientRect();
+  const stageRect = stage.getBoundingClientRect();
+
+  // scale from displayed size to natural/original media size
+  const naturalW = media.videoWidth || media.naturalWidth;
+  const naturalH = media.videoHeight || media.naturalHeight;
+  const scaleX = naturalW / mediaRect.width;
+  const scaleY = naturalH / mediaRect.height;
+
+  const x = Math.round((cropbox.offsetLeft - (mediaRect.left - stageRect.left)) * scaleX);
+  const y = Math.round((cropbox.offsetTop - (mediaRect.top - stageRect.top)) * scaleY);
+  const w = Math.round(cropbox.offsetWidth * scaleX);
+  const h = Math.round(cropbox.offsetHeight * scaleY);
+
+  submitBtn.disabled = true;
+  statusEl.textContent = 'Processing…';
+
+  try {
+    const res = await fetch(window.location.pathname + '/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x, y, w, h }),
+    });
+    if (!res.ok) throw new Error('Request failed');
+    statusEl.textContent = 'Sent to Telegram!';
+  } catch (err) {
+    statusEl.textContent = 'Failed — try again.';
+    submitBtn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>

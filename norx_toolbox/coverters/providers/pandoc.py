@@ -1,0 +1,131 @@
+from pathlib import Path
+
+from norx_toolbox.coverters.base import run_subprocess
+
+FROM_FORMATS = {
+    "textile",
+    "tikiwiki",
+    "tsv",
+    "twiki",
+    "typst",
+    "vimwiki",
+    "biblatex",
+    "bibtex",
+    "bits",
+    "commonmark",
+    "commonmark_x",
+    "creole",
+    "csljson",
+    "csv",
+    "djot",
+    "docbook",
+    "docx",
+    "dokuwiki",
+    "endnotexml",
+    "epub",
+    "fb2",
+    "gfm",
+    "haddock",
+    "html",
+    "ipynb",
+    "jats",
+    "jira",
+    "json",
+    "latex",
+    "man",
+    "markdown",
+    "markdown_mmd",
+    "markdown_phpextra",
+    "markdown_strict",
+    "mediawiki",
+    "muse",
+    "opml",
+    "org",
+    "ris",
+    "rst",
+    "rtf",
+    "t2t",
+}
+
+TO_FORMATS = {
+    "tei",
+    "texinfo",
+    "textile",
+    "typst",
+    "xwiki",
+    "zimwiki",
+    "asciidoc",
+    "asciidoc_legacy",
+    "asciidoctor",
+    "beamer",
+    "biblatex",
+    "bibtex",
+    "chunkedhtml",
+    "commonmark",
+    "commonmark_x",
+    "context",
+    "csljson",
+    "djot",
+    "docbook",
+    "docbook4",
+    "docbook5",
+    "docx",
+    "dokuwiki",
+    "dzslides",
+    "epub",
+    "epub2",
+    "epub3",
+    "fb2",
+    "gfm",
+    "haddock",
+    "html",
+    "html4",
+    "html5",
+    "icml",
+    "ipynb",
+    "jats",
+    "jats_archiving",
+    "jats_articleauthoring",
+    "jats_publishing",
+    "jira",
+    "json",
+    "latex",
+    "man",
+    "markdown",
+    "markdown_mmd",
+    "markdown_phpextra",
+    "markdown_strict",
+    "markua",
+    "mediawiki",
+    "ms",
+    "muse",
+    "odt",
+    "opendocument",
+    "opml",
+    "org",
+    "pdf",
+    "plain",
+    "pptx",
+    "revealjs",
+    "rst",
+    "rtf",
+    "s5",
+    "slideous",
+    "slidy",
+}
+
+_XELATEX_TARGETS = {"pdf", "latex"}
+
+
+async def convert(input_path: Path, output_path: Path) -> Path:
+    from_ext = input_path.suffix.lstrip(".").lower()
+    to_ext = output_path.suffix.lstrip(".").lower()
+
+    args = []
+    if to_ext in _XELATEX_TARGETS:
+        args.append("--pdf-engine=xelatex")
+
+    args += [str(input_path), "-f", from_ext, "-t", to_ext, "-o", str(output_path)]
+
+    await run_subprocess("pandoc", *args)
+    return output_path
