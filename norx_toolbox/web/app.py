@@ -31,6 +31,9 @@ async def root_redirect():
     me = await app.task_manager.bot.get_me()
     return redirect(f"https://t.me/{me.username}")
 
+@app.route("/health")
+async def health_check():
+    return "OK!"
 
 # --- CROP  ---
 
