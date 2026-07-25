@@ -25,6 +25,7 @@ Private Telegram bot for downloading, converting, and editing media — built fo
 
 ## Project structure
 
+```
 norx_toolbox/
 ├── main.py # entrypoint — runs bot + web server + cleanup loops together
 ├── config.py # env-driven config, single source of truth
@@ -47,6 +48,7 @@ norx_toolbox/
 │ ├── app.py # Quart routes
 │ └── templates/
 └── utils/
+```
 
 ## Setup
 
