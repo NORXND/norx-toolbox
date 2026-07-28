@@ -62,6 +62,6 @@ async def cmd_share(message: Message, expires: str | None, user_id: int, **_):
     dash_token = get_dashboard_token(user_id)
     await message.answer(
         escape_md(
-            f"{config.SHARE_BASE}/share/{token}/{local_path.name}\nExpires in {ttl_seconds // 3600}h — manage at {config.PUBLIC_URL}/workspace/dashboard/{dash_token}"
+            f"{config.SHARE_BASE}/{token}/{local_path.name}\nExpires in {ttl_seconds // 3600}h — manage at {config.PUBLIC_URL}/workspace/dashboard/{dash_token}"
         )
     )

@@ -35,7 +35,7 @@ async def cmd_shorten(
         )
 
     dash_token = get_dashboard_token(user_id)
-    reply = f"{config.SHORTEN_BASE}/go/{token}"
+    reply = f"{config.SHORTEN_BASE}/{token}"
     if expires_at is None:
         reply += (
             "\n(permanent — manage at "

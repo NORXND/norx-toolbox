@@ -9,7 +9,7 @@ Private Telegram bot for downloading, converting, and editing media — built fo
 - **`/trim <start> <end>`** (attach video/audio) — trim an uploaded file
 - **`/convert <format>`** (attach file) — convert between 100+ formats via a registry of specialized tools (ffmpeg, LibreOffice, pandoc, ImageMagick, Inkscape, and more)
 - **`/crop`** (attach image/video) — opens a web page to select a crop region, delivers the result back via Telegram
-- **`/go <url> [duration]`** — URL shortener, permanent by default
+- **`/shorten <url> [duration]`** — URL shortener, permanent by default
 - **`/share [duration]`** (attach file) — temporary file sharing link, expires by default (1 day)
 - Bare links sent in chat are auto-downloaded (no command needed)
 - Per-user dashboard for managing your own links/files
@@ -66,7 +66,7 @@ Copy `.env.example` to `.env` and fill in:
 | `BOT_TOKEN` | Telegram bot token from [@BotFather](https://t.me/BotFather) | *(required)* |
 | `PUBLIC_URL` | Base URL for `/workspace` tool pages (crop, dashboard) | *(required)* |
 | `SHARE_BASE` | Base URL for `/share` file links | *(required)* |
-| `SHORTEN_BASE` | Base URL for `/go` short links | *(required)* |
+| `SHORTEN_BASE` | Base URL for `/shorten` short links | *(required)* |
 | `OUTPUT_DIR` | Directory for stored files + SQLite DB | `/data/norx-toolbox` |
 | `LINK_TTL_SECONDS` | Default expiry for delivery-fallback links | `3600` |
 | `WEB_BIND` | Hypercorn bind address | `0.0.0.0:8000` |
