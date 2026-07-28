@@ -12,7 +12,7 @@ from norx_toolbox.bot.main import bot_start, prepare_bot
 from norx_toolbox.config import config
 from norx_toolbox.db import init_db
 from norx_toolbox.delivery.storage import (sweep_expired,
-                                           sweep_orphaned_tempdirs)
+                                           sweep_orphaned_tempdirs, sweep_sessions)
 from norx_toolbox.task_manager import TaskManager
 from norx_toolbox.web.app import app as quart_app
 
@@ -49,6 +49,7 @@ async def main():
             serve(quart_app, hypercorn_config, shutdown_trigger=stop_event.wait),
             sweep_expired(),
             sweep_orphaned_tempdirs(),
+            sweep_sessions(),
         )
     except asyncio.CancelledError:
         pass

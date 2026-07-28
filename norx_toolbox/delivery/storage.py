@@ -53,6 +53,17 @@ def resolve(token: str, filename: str) -> Path | None:
     # expiry is enforced by the sweep, not checked here — sweep deletes the dir entirely
     return dest
 
+async def sweep_sessions():
+    """Cleans up expired crop/upload sessions."""
+    while True:
+        now = time.time()
+        for token in list(_crop_sessions.keys()):
+            if _crop_sessions[token].expires_at < now:
+                del _crop_sessions[token]
+        for token in list(_upload_sessions.keys()):
+            if _upload_sessions[token].expires_at < now:
+                del _upload_sessions[token]
+        await asyncio.sleep(600)
 
 async def sweep_expired():
     """Cleans DB-tracked files/links (user-created, has dashboard entries)."""
