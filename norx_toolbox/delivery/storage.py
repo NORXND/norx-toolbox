@@ -4,6 +4,7 @@ import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from norx_toolbox.config import config
 from norx_toolbox.db import get_db
@@ -128,3 +129,43 @@ def get_crop_session(token: str) -> CropSession | None:
     if session and session.expires_at > time.time():
         return session
     return None
+
+
+@dataclass
+class UploadSession:
+    token: str
+    kind: str  # "convert" | "trim"
+    params: dict[str, Any]
+    user_id: int
+    chat_id: int
+    expires_at: float
+
+
+_upload_sessions: dict[str, UploadSession] = {}
+
+
+def create_upload_session(
+    kind: str, params: dict[str, Any], user_id: int, chat_id: int
+) -> UploadSession:
+    token = secrets.token_urlsafe(24)
+    session = UploadSession(
+        token=token,
+        kind=kind,
+        params=params,
+        user_id=user_id,
+        chat_id=chat_id,
+        expires_at=time.time() + 3600,
+    )
+    _upload_sessions[token] = session
+    return session
+
+
+def get_upload_session(token: str) -> UploadSession | None:
+    session = _upload_sessions.get(token)
+    if session and session.expires_at > time.time():
+        return session
+    return None
+
+
+def pop_upload_session(token: str) -> UploadSession | None:
+    return _upload_sessions.pop(token, None)

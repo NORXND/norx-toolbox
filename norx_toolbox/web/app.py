@@ -1,13 +1,16 @@
+import tempfile
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from quart import Quart, abort, jsonify, redirect, render_template, request, send_file
 
+from norx_toolbox.bot.handlers.convert import escape_md
 from norx_toolbox.coverters.providers import ffmpeg, pillow_conv
+from norx_toolbox.coverters.registry import convert_file
 from norx_toolbox.db import get_db
 from norx_toolbox.delivery.deliver import deliver_to_chat
-from norx_toolbox.delivery.storage import get_crop_session, resolve_download
+from norx_toolbox.delivery.storage import get_crop_session, get_upload_session, pop_upload_session, resolve_download
 
 if TYPE_CHECKING:
     from norx_toolbox.bot.handlers.download import TaskManager
@@ -164,3 +167,54 @@ async def delete_file(dash_token: str, token: str):
             shutil.rmtree(Path(row["path"]).parent, ignore_errors=True)
         conn.execute("DELETE FROM files WHERE token = ? AND user_id = ?", (token, user_row["user_id"]))
     return jsonify({"status": "ok"})
+
+# --- DOWNLOADS ---
+
+
+@app.route("/workspace/upload/<token>")
+async def upload_page(token: str):
+    session = get_upload_session(token)
+    if session is None:
+        abort(404)
+    return await render_template(
+        "upload.html", token=token, kind=session.kind, params=session.params
+    )
+
+
+@app.route("/workspace/upload/<token>/submit", methods=["POST"])
+async def upload_submit(token: str):
+    session = pop_upload_session(token)  # one-shot — consumed on use
+    if session is None:
+        abort(404)
+
+    files = await request.files
+    uploaded = files.get("file")
+    if uploaded is None:
+        return {"error": "no file provided"}, 400
+
+    workdir = Path(tempfile.mkdtemp(prefix="upload_"))
+    local_path = workdir / uploaded.filename
+    await uploaded.save(local_path)
+
+    try:
+        if session.kind == "convert":
+            result_path = await convert_file(
+                local_path, session.params["format"], workdir
+            )
+        elif session.kind == "trim":
+            output_path = workdir / "trimmed.mp4"
+            result_path = await ffmpeg.trim(
+                local_path, output_path, session.params["start"], session.params["end"]
+            )
+        else:
+            return {"error": "unknown session kind"}, 400
+
+        await deliver_to_chat(
+            app.task_manager.bot,
+            session.chat_id,
+            result_path,
+        )
+        return {"status": "ok"}
+    except Exception as e:
+        await app.task_manager.bot.send_message(session.chat_id, escape_md(f"Job failed: {str(e)}"))
+        return {"error": str(e)}, 500

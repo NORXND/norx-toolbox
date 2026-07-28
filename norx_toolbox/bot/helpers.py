@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from aiogram.filters import CommandObject
-from aiogram.types import Audio, Document, Message, Video
+from aiogram.types import Animation, Audio, Document, Message, PhotoSize, Video, VideoNote, Voice
 
 from norx_toolbox.bot.markdown import bold, code, code_block, escape_md
 
@@ -112,14 +112,19 @@ def require_user(handler):
     return wrapper
 
 
-def extract_attachment(message: Message) -> Document | Video | Audio | None:
-    return message.document or message.video or message.audio
-
-
-def _safe_filename(name: str) -> str:
-    """Strip path separators and other filesystem-unsafe characters, keep the rest."""
-    name = Path(name).name  # drop any directory components Telegram might include
-    return re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", name)
+def extract_attachment(
+    message: Message,
+) -> Document | Video | Audio | Voice | VideoNote | Animation | PhotoSize | None:
+    if message.photo:
+        return message.photo[-1]  # largest available size
+    return (
+        message.document
+        or message.video
+        or message.audio
+        or message.voice
+        or message.video_note
+        or message.animation
+    )
 
 
 def _url_safe_filename(name: str) -> str:
@@ -136,9 +141,13 @@ async def download_attachment(message: Message, tg_file) -> Path:
     if file_name:
         local_name = _url_safe_filename(file_name)
     else:
-        # Fall back to file_id with a guessed suffix, ensuring the file_id itself is safe
         base_id = _url_safe_filename(tg_file.file_id)
-        local_name = f"{base_id}.ogg" if hasattr(tg_file, "duration") else base_id
+        if isinstance(tg_file, PhotoSize):
+            local_name = f"{base_id}.jpg"  # Telegram always compresses photos to JPEG
+        elif hasattr(tg_file, "duration"):
+            local_name = f"{base_id}.ogg"  # voice notes / audio without a filename
+        else:
+            local_name = base_id
 
     local_path = workdir / local_name
 

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload</title>
+<style>
+  body { margin:0; background:#111; color:#eee; font-family: system-ui, sans-serif;
+         display:flex; flex-direction:column; align-items:center; justify-content:center;
+         height:100vh; padding: 20px; box-sizing: border-box; }
+  #dropzone { border: 2px dashed #4dabf7; border-radius: 12px; padding: 40px;
+              text-align:center; width: 100%; max-width: 420px; cursor: pointer; }
+  #dropzone.drag { background: rgba(77,171,247,0.1); }
+  input[type=file] { display: none; }
+  #status { margin-top: 16px; color: #999; font-size: 14px; }
+  .info { font-size: 13px; color: #888; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<div class="info">
+  {% if kind == "convert" %}
+  Converting to <strong>{{ params.format }}</strong>
+  {% elif kind == "trim" %}
+  Trimming {{ params.start }} → {{ params.end }}
+  {% endif %}
+</div>
+
+<div id="dropzone">
+  <p>Drop a file here, or click to choose</p>
+  <input type="file" id="file-input">
+</div>
+<div id="status"></div>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const statusEl = document.getElementById('status');
+
+dropzone.addEventListener('click', () => fileInput.click());
+
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if (e.dataTransfer.files.length) upload(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) upload(fileInput.files[0]);
+});
+
+async function upload(file) {
+  statusEl.textContent = `Uploading ${file.name}…`;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(window.location.pathname + '/submit', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    statusEl.textContent = 'Done — check Telegram!';
+  } catch (err) {
+    statusEl.textContent = 'Failed: ' + err.message;
+  }
+}
+</script>
+
+</body>
+</html>

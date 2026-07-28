@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from .storage import store_for_download
 
-MAX_TELEGRAM_SIZE = 50 * 1024 * 1024
+MAX_TELEGRAM_SIZE = 49 * 1024 * 1024
 
 
 async def deliver_result(message: "Message", filepath: Path):
