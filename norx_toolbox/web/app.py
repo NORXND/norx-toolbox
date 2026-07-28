@@ -1,3 +1,4 @@
+from os import getenv
 import tempfile
 import time
 from pathlib import Path
@@ -32,13 +33,13 @@ class QuartWithTaskManager(Quart):
         super().__init__(*args, **kwargs)
         self.task_manager = task_manager
         self.template_folder = str(Path(__file__).parent / "templates")
+        self.config["MAX_CONTENT_LENGTH"] = int(getenv("UPLOAD_MAX_BYTES", 100 * 1024 * 1024))
 
     def set_task_manager(self, task_manager):
         self.task_manager = task_manager
 
 
 app = QuartWithTaskManager(None, __name__)
-
 
 @app.route("/")
 async def root_redirect():
