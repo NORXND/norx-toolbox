@@ -11,12 +11,16 @@ from hypercorn.config import Config
 from norx_toolbox.bot.main import bot_start, prepare_bot
 from norx_toolbox.config import config
 from norx_toolbox.db import init_db
-from norx_toolbox.delivery.storage import (sweep_expired,
-                                           sweep_orphaned_tempdirs, sweep_sessions)
+from norx_toolbox.delivery.storage import (
+    sweep_expired,
+    sweep_orphaned_tempdirs,
+    sweep_sessions,
+)
 from norx_toolbox.task_manager import TaskManager
 from norx_toolbox.web.app import app as quart_app
 
 load_dotenv()
+
 
 async def main():
     init_db()
@@ -55,6 +59,7 @@ async def main():
         pass
     finally:
         await bot.session.close()  # clean up aiohttp session aiogram opens
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)

@@ -8,7 +8,16 @@ from pathlib import Path
 from typing import Any, Callable
 
 from aiogram.filters import CommandObject
-from aiogram.types import Animation, Audio, Document, Message, PhotoSize, Video, VideoNote, Voice
+from aiogram.types import (
+    Animation,
+    Audio,
+    Document,
+    Message,
+    PhotoSize,
+    Video,
+    VideoNote,
+    Voice,
+)
 
 from norx_toolbox.bot.markdown import bold, code, code_block, escape_md
 
@@ -163,5 +172,5 @@ async def download_attachment(message: Message, tg_file) -> Path:
 
 async def send_error(message: Message, title: str, exc: Exception):
     await message.answer(
-        bold(title)+ "\n" + code_block(str(exc)[-1500:]),
+        bold(title) + "\n" + code_block(str(exc)[-1500:]),
     )

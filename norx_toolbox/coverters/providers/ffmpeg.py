@@ -688,6 +688,7 @@ TO_FORMATS = {
 AUDIO_EXTENSIONS = {"mp3", "wav", "flac", "aac", "ogg", "opus", "m4a", "wma", "voice"}
 VIDEO_EXTENSIONS = {"mp4", "mkv", "avi", "mov", "flv", "webm", "wmv", "mpeg", "mpg"}
 
+
 async def convert(
     input_path: Path, output_path: Path, extra_args: list[str] | None = None
 ) -> Path:

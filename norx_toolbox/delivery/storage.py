@@ -53,6 +53,7 @@ def resolve(token: str, filename: str) -> Path | None:
     # expiry is enforced by the sweep, not checked here — sweep deletes the dir entirely
     return dest
 
+
 async def sweep_sessions():
     """Cleans up expired crop/upload sessions."""
     while True:
@@ -64,6 +65,7 @@ async def sweep_sessions():
             if _upload_sessions[token].expires_at < now:
                 del _upload_sessions[token]
         await asyncio.sleep(600)
+
 
 async def sweep_expired():
     """Cleans DB-tracked files/links (user-created, has dashboard entries)."""
@@ -105,6 +107,7 @@ async def sweep_orphaned_tempdirs():
                     shutil.rmtree(path, ignore_errors=True)
         await asyncio.sleep(1800)
 
+
 @dataclass
 class Session:
     token: str
@@ -112,10 +115,12 @@ class Session:
     chat_id: int
     expires_at: float
 
+
 @dataclass
 class CropSession(Session):
     file_path: Path
     is_video: bool
+
 
 _crop_sessions: dict[str, CropSession] = {}
 
@@ -153,7 +158,10 @@ _upload_sessions: dict[str, UploadSession] = {}
 
 
 def create_upload_session(
-    kind: Literal["convert", "trim", "crop"], params: dict[str, Any], user_id: int, chat_id: int
+    kind: Literal["convert", "trim", "crop"],
+    params: dict[str, Any],
+    user_id: int,
+    chat_id: int,
 ) -> UploadSession:
     token = secrets.token_urlsafe(24)
     session = UploadSession(

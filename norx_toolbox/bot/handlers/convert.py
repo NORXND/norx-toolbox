@@ -15,11 +15,11 @@ from norx_toolbox.bot.helpers import (
     send_error,
     with_args,
 )
+from norx_toolbox.config import config
 from norx_toolbox.coverters.registry import NoConverterError, convert_file
 from norx_toolbox.delivery.deliver import deliver_result
 from norx_toolbox.delivery.storage import create_upload_session
 from norx_toolbox.task_manager import TaskKind, TaskManager
-from norx_toolbox.config import config
 
 router = Router(name="convert")
 
@@ -32,7 +32,9 @@ async def cmd_convert(
 ):
     tg_file = extract_attachment(message)
     if tg_file is None:
-        session = create_upload_session("convert", {"format": format}, user_id, message.chat.id)
+        session = create_upload_session(
+            "convert", {"format": format}, user_id, message.chat.id
+        )
         await message.answer(
             escape_md(
                 f"No file attached — or it might be too large for Telegram to hand off to me (20MB limit on downloads).\n\n"

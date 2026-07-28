@@ -5,10 +5,10 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from norx_toolbox.config import config
 from norx_toolbox.bot.handlers.convert import download_attachment
 from norx_toolbox.bot.handlers.download import escape_md, send_error
 from norx_toolbox.bot.helpers import Arg, code, require_user, with_args
+from norx_toolbox.config import config
 from norx_toolbox.coverters.providers import ffmpeg
 from norx_toolbox.delivery.deliver import deliver_result
 from norx_toolbox.delivery.storage import create_upload_session
@@ -34,7 +34,9 @@ async def cmd_trim(
 ):
     tg_file = message.video or message.document
     if tg_file is None:
-        session = create_upload_session("trim", {"start": start, "end": end}, user_id, message.chat.id)
+        session = create_upload_session(
+            "trim", {"start": start, "end": end}, user_id, message.chat.id
+        )
         await message.answer(
             escape_md(
                 f"No file attached — or it might be too large for Telegram to hand off to me (20MB limit on downloads).\n\n"
