@@ -4,7 +4,7 @@ import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from norx_toolbox.config import config
 from norx_toolbox.db import get_db
@@ -94,16 +94,17 @@ async def sweep_orphaned_tempdirs():
                     shutil.rmtree(path, ignore_errors=True)
         await asyncio.sleep(1800)
 
-
 @dataclass
-class CropSession:
+class Session:
     token: str
-    file_path: Path
     user_id: int
     chat_id: int
-    is_video: bool
     expires_at: float
 
+@dataclass
+class CropSession(Session):
+    file_path: Path
+    is_video: bool
 
 _crop_sessions: dict[str, CropSession] = {}
 
@@ -132,20 +133,16 @@ def get_crop_session(token: str) -> CropSession | None:
 
 
 @dataclass
-class UploadSession:
-    token: str
-    kind: str  # "convert" | "trim"
+class UploadSession(Session):
+    kind: Literal["convert", "trim", "crop"]
     params: dict[str, Any]
-    user_id: int
-    chat_id: int
-    expires_at: float
 
 
 _upload_sessions: dict[str, UploadSession] = {}
 
 
 def create_upload_session(
-    kind: str, params: dict[str, Any], user_id: int, chat_id: int
+    kind: Literal["convert", "trim", "crop"], params: dict[str, Any], user_id: int, chat_id: int
 ) -> UploadSession:
     token = secrets.token_urlsafe(24)
     session = UploadSession(

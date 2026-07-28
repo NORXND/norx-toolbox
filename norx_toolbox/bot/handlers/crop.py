@@ -9,7 +9,7 @@ from norx_toolbox.bot.helpers import (
     require_user,
 )
 from norx_toolbox.config import config
-from norx_toolbox.delivery.storage import create_crop_session
+from norx_toolbox.delivery.storage import create_crop_session, create_upload_session
 
 router = Router(name="crop")
 
@@ -19,8 +19,14 @@ router = Router(name="crop")
 async def cmd_crop(message: Message, user_id: int, **_):
     tg_file = extract_attachment(message)
     if tg_file is None:
+        upload_session = create_upload_session(
+            "crop", {}, user_id, message.chat.id
+        )
         await message.answer(
-            escape_md("Attach an image or video to the /crop message.")
+            escape_md(
+                f"No file attached — or it might be too large for Telegram to hand off to me (20MB limit on downloads).\n\n"
+                f"Upload directly here instead:\n{config.PUBLIC_URL}/workspace/upload/{upload_session.token}"
+            )
         )
         return
 

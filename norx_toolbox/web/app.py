@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING
 
 from quart import Quart, abort, jsonify, redirect, render_template, request, send_file
 
+from norx_toolbox.config import config
 from norx_toolbox.bot.handlers.convert import escape_md
 from norx_toolbox.coverters.providers import ffmpeg, pillow_conv
 from norx_toolbox.coverters.registry import convert_file
 from norx_toolbox.db import get_db
 from norx_toolbox.delivery.deliver import deliver_to_chat
-from norx_toolbox.delivery.storage import get_crop_session, get_upload_session, pop_upload_session, resolve_download
+from norx_toolbox.delivery.storage import create_crop_session, get_crop_session, get_upload_session, pop_upload_session, resolve_download
 
 if TYPE_CHECKING:
     from norx_toolbox.bot.handlers.download import TaskManager
@@ -206,6 +207,15 @@ async def upload_submit(token: str):
             result_path = await ffmpeg.trim(
                 local_path, output_path, session.params["start"], session.params["end"]
             )
+        elif session.kind == "crop":
+            ext = local_path.suffix.lstrip(".").lower()
+            is_video = ext in ffmpeg.VIDEO_EXTENSIONS
+            crop_session = create_crop_session(local_path, session.user_id, session.chat_id, is_video)
+            await app.task_manager.bot.send_message(
+                session.chat_id,
+                escape_md(f"Open this link to crop:\n{config.PUBLIC_URL}/workspace/crop/{crop_session.token}")
+            )
+            return {"status": "ok"}
         else:
             return {"error": "unknown session kind"}, 400
 
