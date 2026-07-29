@@ -1,8 +1,12 @@
 import tempfile
 from pathlib import Path
-import yt_dlp # type: ignore[import-untyped]
+
+import yt_dlp  # type: ignore[import-untyped]
+
+from norx_toolbox.config import config
 
 AUDIO_FORMATS = {"mp3", "wav", "flac", "aac", "ogg", "opus", "m4a", "wma"}
+
 
 def download_source(url: str, audio_only: bool = False) -> Path:
     """
@@ -20,6 +24,11 @@ def download_source(url: str, audio_only: bool = False) -> Path:
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
+        "cookiefile": (
+            str(Path(config.DOWNLOAD_COOKIE_FILE))
+            if config.DOWNLOAD_COOKIE_FILE
+            else None
+        ),
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore[arg-type]
@@ -32,7 +41,9 @@ def download_source(url: str, audio_only: bool = False) -> Path:
         if not result_path.exists():
             candidates = list(tmp_dir.glob("*"))
             if not candidates:
-                raise RuntimeError("yt-dlp reported success but no output file was found")
+                raise RuntimeError(
+                    "yt-dlp reported success but no output file was found"
+                )
             result_path = candidates[0]
 
     return result_path

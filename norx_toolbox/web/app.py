@@ -1,6 +1,6 @@
-from os import getenv
 import tempfile
 import time
+from os import getenv
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -33,13 +33,16 @@ class QuartWithTaskManager(Quart):
         super().__init__(*args, **kwargs)
         self.task_manager = task_manager
         self.template_folder = str(Path(__file__).parent / "templates")
-        self.config["MAX_CONTENT_LENGTH"] = int(getenv("UPLOAD_MAX_BYTES", 100 * 1024 * 1024))
+        self.config["MAX_CONTENT_LENGTH"] = int(
+            getenv("UPLOAD_MAX_BYTES", 100 * 1024 * 1024)
+        )
 
     def set_task_manager(self, task_manager):
         self.task_manager = task_manager
 
 
 app = QuartWithTaskManager(None, __name__)
+
 
 @app.route("/")
 async def root_redirect():
@@ -231,9 +234,9 @@ async def upload_submit(token: str):
     if uploaded is None:
         return {"error": "no file provided"}, 400
 
+    filename = uploaded.filename or "uploaded_file"
     workdir = Path(tempfile.mkdtemp(prefix="upload_"))
-    local_path = workdir / uploaded.filename
-    await uploaded.save(local_path)
+    local_path = workdir / filename
 
     try:
         if session.kind == "convert":
