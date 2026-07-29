@@ -68,6 +68,7 @@ Copy `.env.example` to `.env` and fill in:
 | `SHARE_BASE` | Base URL for `/share` file links | *(required)* |
 | `SHORTEN_BASE` | Base URL for `/shorten` short links | *(required)* |
 | `OUTPUT_DIR` | Directory for stored files + SQLite DB | `/data/norx-toolbox` |
+| `DOWNLOAD_COOKIE_FILE` | Path for cookie file to be used with yt-dlp | *(optional)* |
 | `UPLOAD_MAX_BYTES` | Maxium size (in bytes) of files uploaded outside Telegram (via web UI) | 104857600 (100 MB) |
 | `LINK_TTL_SECONDS` | Default expiry for delivery-fallback links | `3600` |
 | `WEB_BIND` | Hypercorn bind address | `0.0.0.0:8000` |

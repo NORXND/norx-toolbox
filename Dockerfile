@@ -51,16 +51,15 @@ RUN ARCH=$(uname -m) && \
   chmod +x /usr/local/bin/vtracer && \
   rm /tmp/vtracer.tar.gz
 
+RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh -s -- -y
+
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* requirements.txt* ./
-RUN pip install --no-cache-dir --break-system-packages -e .
-
 COPY . .
-
+RUN pip install --no-cache-dir --break-system-packages .
 
 RUN useradd --create-home --shell /bin/bash norxtoolbox
-RUN mkdir -p /data/norx-toolbox && chown -R norxtoolbox:norxtoolbox /app /data
+RUN mkdir -p /data/outputs && chown -R norxtoolbox:norxtoolbox /app /data
 USER norxtoolbox
 
 EXPOSE 8000
